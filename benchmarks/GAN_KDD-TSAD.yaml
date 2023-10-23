@@ -1,0 +1,10 @@
+model: GAN
+dataset: KDD-TSAD
+max_epochs: 10
+batch_size: 512
+window_size: 100
+hidden_size: 128
+prediction_length: 1
+dropout: 0
+num_layers: 4
+learning_rate: 0.001

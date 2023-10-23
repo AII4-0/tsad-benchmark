@@ -1,0 +1,4 @@
+flake8==6.0.0
+flake8-annotations==2.9.1
+pep8-naming==0.13.2
+flake8-docstrings==1.6.0

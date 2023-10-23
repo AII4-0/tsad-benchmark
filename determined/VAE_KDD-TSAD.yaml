@@ -1,0 +1,18 @@
+name: VAE-KDD-TSAD
+
+entrypoint: python main.py --determined --config benchmarks/VAE_KDD-TSAD.yaml
+
+searcher:
+  name: single
+  metric: f1_adjusted
+  max_length: 1
+
+checkpoint_storage:
+  save_trial_latest: 1000
+
+bind_mounts:
+  - host_path: /data
+    container_path: /run/determined/workdir/data
+
+
+max_restarts: 0

@@ -1,0 +1,9 @@
+torch==1.12.1
+torchvision==0.13.1
+pytorch-lightning==1.8.4
+tqdm==4.64.1
+scikit-learn==1.2.0
+pandas==1.5.2
+numpy==1.23.5
+determined==0.19.8
+pyyaml==5.4.1
