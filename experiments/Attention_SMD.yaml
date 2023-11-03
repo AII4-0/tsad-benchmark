@@ -1,0 +1,9 @@
+model: Attention
+dataset: SMD
+epochs: 10
+batch_size: 516
+window_size: 100
+hidden_size: 200
+num_layers: 4
+prediction_length: 1
+learning_rate: 0.001

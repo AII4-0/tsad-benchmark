@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List
+from typing import List, Optional
 
 from datasets.time_series_types import TimeSeriesTypes
 
@@ -10,6 +10,6 @@ class DatasetDescriptor:
 
     name: str
     type: TimeSeriesTypes
-    download_url: str
+    download_url: Optional[str]
     dimension: int
     entities: List[str]

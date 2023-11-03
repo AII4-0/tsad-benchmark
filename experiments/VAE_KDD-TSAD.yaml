@@ -1,0 +1,9 @@
+model: VAE
+dataset: KDD-TSAD
+epochs: 10
+batch_size: 512
+window_size: 100
+hidden_size: 512
+encoded_size: 256
+prediction_length: 1
+learning_rate: 0.001

@@ -1,0 +1,10 @@
+model: TranAD
+dataset: NASA-MSL
+epochs: 10
+batch_size: 256
+window_size: 100
+hidden_size: 16
+prediction_length: 1
+dropout: 0
+num_layers: 3
+learning_rate: 0.001
