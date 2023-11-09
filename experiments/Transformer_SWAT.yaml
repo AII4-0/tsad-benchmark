@@ -1,0 +1,11 @@
+model: Transformer
+dataset: SWAT
+epochs: 10
+batch_size: 512
+window_size: 100
+n_head: 2
+num_encoder_layers: 2
+num_decoder_layers: 2
+dropout: 0.1
+prediction_length: 1
+learning_rate: 0.001

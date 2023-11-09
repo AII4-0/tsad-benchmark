@@ -1,27 +1,23 @@
 from argparse import ArgumentParser
 from typing import Tuple
 
-import torch
 import torch.nn as nn
 import torch.nn.functional as F  # noqa
 from torch import Tensor
-from torch.optim import Optimizer
 
-from lightning.entity_module import EntityModule
+from benchmark.model_module import ModelModule
 
 
-class Transformer(EntityModule):
+class Transformer(ModelModule):
     """This class is a Transformer-based anomaly detection model."""
 
-    # noinspection PyUnusedLocal
     def __init__(self,
                  in_channels: int,
                  num_encoder_layers: int,
                  num_decoder_layers: int,
                  dropout: float,
                  prediction_length: int,
-                 learning_rate: float,
-                 **kwargs) -> None:
+                 learning_rate: float) -> None:
         """
         Create an object of `Transformer` class.
 
@@ -29,9 +25,8 @@ class Transformer(EntityModule):
         :param num_encoder_layers : The number of layers of the encoder model.
         :param num_decoder_layers : The number of layers of the decoder model.
         :param dropout: The probability of an element to be zeroed in the dropout layer.
-        :param kwargs: Additional keyword arguments.
         """
-        super().__init__()
+        super().__init__(prediction_length, learning_rate)
 
         # Create the Transformer
         self.transformer = nn.Transformer(
@@ -45,12 +40,6 @@ class Transformer(EntityModule):
         # Create the dropout
         self.dropout = nn.Dropout(dropout)
 
-        # Store `prediction_length` as private class attribute
-        self._prediction_length = prediction_length
-
-        # Store `learning_rate` as private class attribute
-        self._learning_rate = learning_rate
-
     @staticmethod
     def add_argparse_args(parent_parser: ArgumentParser) -> ArgumentParser:
         """
@@ -62,10 +51,9 @@ class Transformer(EntityModule):
         parser = parent_parser.add_argument_group("Transformer")
         parser.add_argument("--num_encoder_layers", type=int, required=True)
         parser.add_argument("--num_decoder_layers", type=int, required=True)
-        parser.add_argument("--prediction_length", type=int, required=True)
         parser.add_argument("--dropout", type=float, required=True)
+        parser.add_argument("--prediction_length", type=int, required=True)
         parser.add_argument("--learning_rate", type=float, required=True)
-
         return parent_parser
 
     def forward(self, x: Tensor, y: Tensor) -> Tensor:
@@ -73,6 +61,7 @@ class Transformer(EntityModule):
         Implement the forward pass of the model.
 
         :param x: The input tensor.
+        :param y: The label tensor.
         :return: The output of the model.
         """
         # Apply the Transformer
@@ -91,51 +80,13 @@ class Transformer(EntityModule):
         :param batch: The batch data.
         :return: The loss of the batch.
         """
-        # Split x and y
-        x = batch[:, : -self._prediction_length]
-        y = batch[:, -self._prediction_length:]
+        return super()._training_step(batch, pass_labels=True)
 
-        # Apply the models
-        y_hat = self(x, y)
-
-        # Compute the loss
-        loss = F.mse_loss(y_hat, y, reduction="sum")
-
-        return loss
-
-    def test_step(self, batch: Tuple[Tensor, Tensor], batch_idx: int) -> Tuple[Tensor, Tensor]:
+    def test_step(self, batch: Tuple[Tensor, Tensor]) -> Tuple[Tensor, Tensor]:
         """
         Perform a test step.
 
         :param batch: The batch data (features, labels).
-        :param batch_idx: The batch index.
         :return: The test step output (predictions, labels).
         """
-        # Unpack the batch
-        features, labels = batch
-
-        # Split x and y
-        x = features[:, : -self._prediction_length]
-        y = features[:, -self._prediction_length:]
-
-        # Apply the models
-        y_hat = self(x, y)
-
-        # Compute the score
-        score = F.mse_loss(y_hat, y, reduction="none")
-
-        # Averaging of all variates (batch_size, prediction_length, variates) -> (batch_size, prediction_length)
-        score = score.mean(dim=-1)
-
-        # Apply a sigmoid
-        score = score.sigmoid()
-
-        return score.mean(dim=-1), torch.where(labels.sum(dim=-1) > 0, 1, 0)
-
-    def configure_optimizers(self) -> Optimizer:
-        """
-        Define the optimizer for the training.
-
-        :return: The optimizer for the training.
-        """
-        return torch.optim.Adam(self.parameters(), lr=self._learning_rate, weight_decay=0.001)
+        return super()._test_step(batch, pass_labels=True)

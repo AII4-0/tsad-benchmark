@@ -1,18 +1,14 @@
 import sys
 from argparse import ArgumentParser
 
-from pytorch_lightning import Trainer
-
-from lightning.entity_data_module import EntityDataModule
-from lightning.entity_determined_logger import EntityDeterminedLogger
-from lightning.entity_loop import EntityLoop
+from benchmark.benchmark import Benchmark
+from benchmark.data_module import DataModule
+from models.gan import GAN
 from models.lstm import LSTM
+from models.tran_ad import TranAD
 from models.transformer import Transformer
 from models.vae import VAE
-from models.gan import GAN
-from models.tranAD import TranAD
-
-from utils.namespace import augment_namespace_with_yaml, namespace_to_list
+from utils.arguments import augment_arguments_with_yaml, namespace_to_list, create_from_arguments
 
 
 def main() -> None:
@@ -31,13 +27,10 @@ def main() -> None:
 
     # If the arguments are stored in YAML configuration file, load them
     if args.config:
-        args = augment_namespace_with_yaml(args, args.config)
+        args = augment_arguments_with_yaml(args, args.config)
 
-    # Will this code be executed in a Determined environment?
-    parser.add_argument("--determined", action="store_true")
-
-    # Add trainer arguments
-    parser.add_argument("--max_epochs", type=int, required=True)
+    # Add benchmark arguments
+    parser = Benchmark.add_argparse_args(parser)
 
     # Which model?
     parser.add_argument(
@@ -53,7 +46,7 @@ def main() -> None:
     )
 
     # Add data module arguments
-    parser = EntityDataModule.add_argparse_args(parser)
+    parser = DataModule.add_argparse_args(parser)
 
     # Create a list of arguments
     list_of_args = namespace_to_list(args) + sys.argv[1:]
@@ -85,31 +78,21 @@ def main() -> None:
     # Data
     # ------------------------------------------------------------------------
     # Create the data module
-    data_module = EntityDataModule.from_argparse_args(args)
+    data_module = create_from_arguments(DataModule, args)
 
     # ------------------------------------------------------------------------
     # Model
     # ------------------------------------------------------------------------
-    model = model_cls(in_channels=data_module.dataset.dimension, **vars(args))
+    model = create_from_arguments(model_cls, args, in_channels=data_module.dataset.dimension)
 
     # ------------------------------------------------------------------------
     # Training
     # ------------------------------------------------------------------------
-    # Create the trainer
-    trainer = Trainer(max_epochs=args.max_epochs, log_every_n_steps=20, accelerator="auto")
+    # Create the benchmark
+    benchmark = create_from_arguments(Benchmark, args)
 
-    # If the runtime is Determined AI, use `DeterminedLogger`
-    if args.determined:
-        trainer.logger = EntityDeterminedLogger()
-
-    # Add the entity fit loop
-    original_fit_loop = trainer.fit_loop
-    custom_fit_loop = EntityLoop(len(data_module.dataset.entities))
-    custom_fit_loop.connect(original_fit_loop)
-    trainer.fit_loop = custom_fit_loop
-
-    # Fit the model
-    trainer.fit(model, datamodule=data_module)
+    # Benchmark the model
+    benchmark.run(model, data_module)
 
 
 if __name__ == "__main__":

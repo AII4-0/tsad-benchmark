@@ -1,8 +1,7 @@
 # TSAD: Benchmark for Time Series Anomaly Detection
 
 This repository is a **T**ime **S**eries **A**nomaly **D**etection toolkit named TSAD with a benchmarking protocol and
-state-of-the-art deep learning models. All models are implemented in [PyTorch](https://pytorch.org/) and wrapped with
-the [Lightning](https://www.pytorchlightning.ai/) library to provide a unified and easy-to-use interface.
+state-of-the-art deep learning models. All models are implemented in [PyTorch](https://pytorch.org/).
 
 ## Metrics
 
@@ -188,28 +187,10 @@ pip install -r requirements/requirements.txt
 Then, you can execute a benchmark using the configuration file of your choice:
 
 ```shell
-python main.py --config benchmarks/<config_filename>.yaml
+python main.py --config experiments/<config_filename>.yaml
 ```
 
-All the configuration files are stored in the `benchmarks` folder.
-
-### On Determined AI
-
-It is also possible to run the benchmarks on the Determined AI Platform.
-
-At first, make sure that you have the `DET_MASTER` environment variable:
-
-```shell
-export DET_MASTER=<master_url>
-```
-
-Then, you can execute a benchmark using the configuration file of your choice:
-
-```shell
-det experiment create determined/<config_filename>.yaml .
-```
-
-All the configuration files for Determined AI are store in the `determined` folder.
+All the configuration files are stored in the `experiments` folder.
 
 ## Sources
 

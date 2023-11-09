@@ -1,0 +1,9 @@
+model: GAN
+dataset: NASA-MSL
+epochs: 10
+batch_size: 512
+window_size: 100
+hidden_size: 128
+prediction_length: 1
+num_layers: 3
+learning_rate: 0.001
