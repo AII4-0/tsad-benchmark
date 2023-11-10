@@ -192,6 +192,20 @@ python main.py --config experiments/<config_filename>.yaml
 
 All the configuration files are stored in the `experiments` folder.
 
+## TensorFlow Lite
+
+To convert a PyTorch saved model to TensorFlow Lite, run this command:
+
+```
+python convert_to_tflite.py --dataset <dataset_name> --entity <entity_num> --window_size <window_size> --model <pytorch_saved_model>
+```
+
+Arguments:
+* `dataset_name`: The dataset name that was used to train the model.
+* `entity_num`: The entity number that was used to train the model.
+* `window_size`: The window size that was used to train the model.
+* `pytorch_saved_model`: The PyTorch saved model.
+
 ## Sources
 
 The evaluation protocol is inspired by the work of Jinyang Liu available in the following GitHub repository:
