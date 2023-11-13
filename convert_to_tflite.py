@@ -14,6 +14,7 @@ def main() -> None:
     """The main function of the script."""
 
     # Create the argument parser
+    # noinspection DuplicatedCode
     parser = ArgumentParser()
     parser.add_argument("--data_dir", type=str, default="data")
     parser.add_argument("--dataset", choices=constants.DATASET_NAMES, required=True)
