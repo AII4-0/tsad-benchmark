@@ -151,20 +151,20 @@ All metrics could be calculated with or without point adjustment.
 
 ## Models
 
-| Model | Paper                                                                                                                                                                                                                                                                                |
-|-------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| LSTM  | HUNDMAN, Kyle, CONSTANTINOU, Valentino, LAPORTE, Christopher, *et al*. Detecting spacecraft anomalies using lstms and nonparametric dynamic thresholding. In : *Proceedings of the 24th ACM SIGKDD international conference on knowledge discovery & data mining*. 2018. p. 387-395. |
-| Transformer  | VASWANI, Ashish, SHAZEER, Noam, PARMAR, Niki, *et al*. Attention Is All You Need. In : *Computing Research Repository*. 2017. |
-| GAN  | GOODFELLOW, Ian J., POUGET-ABADIE, Jean, MIRZA, Mehdi, *et al*. Generative Adversarial Networks. In : *Proceedings of the International Conference on Neural Information Processing Systems*. 2014. p. 2672–2680 |
-| VAE  | PINHEIRO CINELLI, Lucas, ARAUJO MARINS, Matheus, ANTUNIO BARROS DA SILVA, Eduardo, *et al*. Variational Autoencoder. In : *Variational Methods for Machine Learning with Applications to Deep Networks*. 2021. p. 111–149 |
-| TranAD  | TULI, Shreshth, CASALE, Giulano, Jennings, Nicholas R. Variational Autoencoder. In : *Proceedings of VLDB*. 2022. p. 1201-1214 |
+| Model       | Paper                                                                                                                                                                                                                                                                                |
+|-------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| LSTM        | HUNDMAN, Kyle, CONSTANTINOU, Valentino, LAPORTE, Christopher, *et al*. Detecting spacecraft anomalies using lstms and nonparametric dynamic thresholding. In : *Proceedings of the 24th ACM SIGKDD international conference on knowledge discovery & data mining*. 2018. p. 387-395. |
+| Transformer | VASWANI, Ashish, SHAZEER, Noam, PARMAR, Niki, *et al*. Attention Is All You Need. In : *Computing Research Repository*. 2017.                                                                                                                                                        |
+| GAN         | GOODFELLOW, Ian J., POUGET-ABADIE, Jean, MIRZA, Mehdi, *et al*. Generative Adversarial Networks. In : *Proceedings of the International Conference on Neural Information Processing Systems*. 2014. p. 2672–2680                                                                     |
+| VAE         | PINHEIRO CINELLI, Lucas, ARAUJO MARINS, Matheus, ANTUNIO BARROS DA SILVA, Eduardo, *et al*. Variational Autoencoder. In : *Variational Methods for Machine Learning with Applications to Deep Networks*. 2021. p. 111–149                                                            |
+| TranAD      | TULI, Shreshth, CASALE, Giulano, Jennings, Nicholas R. Variational Autoencoder. In : *Proceedings of VLDB*. 2022. p. 1201-1214                                                                                                                                                       |
 
 ## Datasets
 
 Well-known public datasets are used for benchmarking. To facilitate the implementation, preprocessed datasets in
 TimeEval file format. These preprocessed datasets were published by Sebastian Schmidl, Phillip Wenig, and Thorsten
-Papenbrock in their paper entitled 
-[*Anomaly detection in time series: a comprehensive evaluation*](https://dl.acm.org/doi/10.14778/3538598.3538602). 
+Papenbrock in their paper entitled
+[*Anomaly detection in time series: a comprehensive evaluation*](https://dl.acm.org/doi/10.14778/3538598.3538602).
 If the dataset is not available in local, it will be automatically downloaded.
 
 | Dataset   | Paper                                                                                                                                                                                                                                                                                |
@@ -196,15 +196,30 @@ All the configuration files are stored in the `experiments` folder.
 
 To convert a PyTorch saved model to TensorFlow Lite, run this command:
 
-```
-python convert_to_tflite.py --dataset <dataset_name> --entity <entity_num> --window_size <window_size> --model <pytorch_saved_model>
+```shell
+python convert_to_tflite.py --dataset <dataset_name> --entity <entity_num> --window_size <window_size> --model <pytorch_model>
 ```
 
 Arguments:
+
 * `dataset_name`: The dataset name that was used to train the model.
 * `entity_num`: The entity number that was used to train the model.
 * `window_size`: The window size that was used to train the model.
-* `pytorch_saved_model`: The PyTorch saved model.
+* `pytorch_model`: The PyTorch saved model.
+
+To check the TensorFlow Lite model performance against the PyTorch model, run this command:
+
+```shell
+python check_tflite_model.py --dataset <dataset_name> --entity <entity_num> --window_size <window_size> --pytorch_model <pytorch_model> --tflite_model <tflite_model>
+```
+
+Arguments:
+
+* `dataset_name`: The dataset name that was used to train the model.
+* `entity_num`: The entity number that was used to train the model.
+* `window_size`: The window size that was used to train the model.
+* `pytorch_model`: The PyTorch saved model.
+* `tflite_mode`: The TensorFlow Lite saved model.
 
 ## Sources
 
