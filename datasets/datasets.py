@@ -266,7 +266,7 @@ class Datasets:
     NASA_MSL = DatasetDescriptor(
         name="NASA-MSL",
         type=TimeSeriesTypes.UNIVARIATE,
-        download_url="https://nextcloud.hpi.de/s/96A4zRdgigBpyMk/download",
+        download_url="https://my.hidrive.com/api/sharelink/download?id=dPCmgheW",
         dimension=1,
         entities=[
             "C-1",
