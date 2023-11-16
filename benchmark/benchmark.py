@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
 from copy import deepcopy
+from pathlib import Path
 
 import torch
 from torch import Tensor
@@ -15,13 +16,15 @@ from metrics.thresholding import best_threshold
 class Benchmark:
     """This class manages the benchmarking of a model."""
 
-    def __init__(self, epochs: int) -> None:
+    def __init__(self, epochs: int, export_folder: Path = None) -> None:
         """
         Create an object of `Trainer` class.
 
         :param epochs: The number of epochs.
+        :param export_folder: The path to the folder where the model weights should be saved.
         """
         self._epochs = epochs
+        self._export_folder = export_folder
 
     @staticmethod
     def add_argparse_args(parent_parser: ArgumentParser) -> ArgumentParser:
@@ -33,6 +36,7 @@ class Benchmark:
         """
         parser = parent_parser.add_argument_group("Benchmark")
         parser.add_argument("--epochs", type=int, required=True)
+        parser.add_argument("--export_folder", type=Path)
         return parent_parser
 
     def run(self, model: ModelModule, data: DataModule) -> None:
@@ -154,6 +158,10 @@ class Benchmark:
                 gl_fp_adj += fp_adj
                 gl_fn += fn
                 gl_fn_adj += fn_adj
+
+                # Save the model if the export folder is specified
+                if self._export_folder:
+                    torch.save(model, self._export_folder / f"{model.__class__.__name__.lower()}_{entity}.pt")
 
                 # Set the model to train mode
                 model.train()
