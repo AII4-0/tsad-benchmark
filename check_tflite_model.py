@@ -22,13 +22,13 @@ def main() -> None:
     parser.add_argument("--window_size", type=int, required=True)
     parser.add_argument("--pytorch_model", type=Path, required=True)
     parser.add_argument("--tflite_model", type=Path, required=True)
-    parser.add_argument("--export_data_in_c", type=bool, default=False)
+    parser.add_argument("--n_inputs_exported_in_c", type=int, default=0)
 
     # Parse all arguments
     args = parser.parse_args()
 
     # Create the data module
-    data_module = DataModule(args.data_dir, args.dataset, args.window_size, 1, args.export_data_in_c)
+    data_module = DataModule(args.data_dir, args.dataset, args.window_size, 1, args.n_inputs_exported_in_c)
 
     # Prepare data
     data_module.prepare_data()
