@@ -8,7 +8,21 @@ from nobuco import ChannelOrder
 
 from benchmark.data_module import DataModule
 from utils import constants
+import os
 
+def convert_to_c(tflite_model, file_name, path0):
+    from tensorflow.lite.python.util import convert_bytes_to_c_source
+    source_text, header_text = convert_bytes_to_c_source(tflite_model, file_name)
+
+    if not os.path.exists(path0):
+        os.makedirs(path0) 
+
+    with  open(os.path.join(path0, file_name + '.h'), 'w') as file:
+        file.write(header_text)
+
+    with  open(os.path.join(path0, file_name + '.cpp'), 'w') as file:
+        file.write("\n#include \"" + file_name + ".h\"\n")
+        file.write(source_text)
 
 def main() -> None:
     """The main function of the script."""
@@ -54,6 +68,12 @@ def main() -> None:
     # Save the model
     with open(args.model.parent.joinpath(args.model.stem + ".tflite"), "wb") as f:
         f.write(tflite_model)
+
+    # convert to C source code and store it
+    print("convert to C source code")
+    source_file = args.model.stem
+    convert_to_c(tflite_model, source_file, args.model.parent)
+
 
 
 if __name__ == "__main__":
