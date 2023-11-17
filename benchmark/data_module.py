@@ -20,7 +20,8 @@ class DataModule:
                  data_dir: str,
                  dataset: str,
                  window_size: int,
-                 batch_size: int) -> None:
+                 batch_size: int,
+                 export_data_in_c : bool = False) -> None:
         """
         Create an object of `DataModule` class.
 
@@ -37,6 +38,7 @@ class DataModule:
         self._window_size = window_size
         self._batch_size = batch_size
         self._entity_idx = 0
+        self._export_data_in_c = export_data_in_c
 
     @staticmethod
     def add_argparse_args(parent_parser: ArgumentParser) -> ArgumentParser:
@@ -51,6 +53,7 @@ class DataModule:
         parser.add_argument("--dataset", choices=constants.DATASET_NAMES, required=True)
         parser.add_argument("--window_size", type=int, required=True)
         parser.add_argument("--batch_size", type=int, required=True)
+        parser.add_argument("--export_data_in_c", type=bool, default=False)
         return parent_parser
 
     def prepare_data(self) -> None:
@@ -124,7 +127,8 @@ class DataModule:
             entity=self.dataset.entities[idx],
             scaler=scaler,
             window_size=self._window_size,
-            train=True
+            train=True,
+            export_data_in_c=self._export_data_in_c
         )
 
         # Create the test datasets
@@ -134,7 +138,8 @@ class DataModule:
             entity=self.dataset.entities[idx],
             scaler=scaler,
             window_size=self._window_size,
-            train=False
+            train=False,
+            export_data_in_c=self._export_data_in_c
         )
 
         # Create the train data loader

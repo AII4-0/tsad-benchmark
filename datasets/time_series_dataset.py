@@ -19,7 +19,8 @@ class TimeSeriesDataset(Dataset):
                  entity: str,
                  scaler: Union[MinMaxScaler, StandardScaler, RobustScaler],
                  window_size: int,
-                 train: bool) -> None:
+                 train: bool,
+                 export_data_in_c: bool = False) -> None:
         """
         Create an object of the `TimeSeriesDataset` class.
 
@@ -60,6 +61,56 @@ class TimeSeriesDataset(Dataset):
         self._features = torch.tensor(features)
         self._labels = torch.tensor(labels)
         self._train = train
+        self._export_data_in_c = export_data_in_c
+
+        # Export the data in C
+        if self._export_data_in_c:
+            # Loop on the selected scv file
+            path_scv_file = os.path.join(data_dir, dataset.name, entity + "." + ("train" if train else "test") + ".csv")
+
+            # create an empty file
+            file_name = os.path.split(os.path.splitext(path_scv_file)[0])[-1].replace(".", "_").replace("-", "_")
+            path_h_file = os.path.split(path_scv_file)[0]
+            path_h_file = os.path.join(path_h_file, file_name + ".h")
+            open(path_h_file, 'w').close()
+
+            # Input shape : 1 x 100 x 1
+            # Penser faire un tableau 2D avec [0][X] == valeur du signal et [1][X] == label
+
+            # append the raw data to the file
+            with open(path_h_file, "a") as file:
+                file_name = os.path.splitext(os.path.split(path_h_file)[-1])[0]
+                file.write("\n#ifndef " + file_name + "_H_\n#define " + file_name + "_H_\n\n")
+
+                # Save the dataset values
+                file.write("const float " + file_name + "[" + str(self._features.size(0)) + "][" + str(window_size) + "][" + str(dataset.dimension) + "] = {\n")
+
+                # array[iInputs][iWindows][iValues]
+                for iInputs in range(self._features.size(0)): # Save the inputs values (iWindows)
+                    file.write("{\n")
+                    for iWindows in range(window_size):   # Save windows values (iValues)
+                        file.write("{")
+                        np.savetxt(file, self._features[iInputs][iWindows], fmt='%f', delimiter=',', newline=',')
+                        file.write("},\n")
+                    file.write("},\n")
+                file.write("};\n")
+
+                # Save the labels values
+                file.write("const float " + file_name + "[" + str(self._labels.size(0)) + "][" + str(window_size) + "] = {\n")
+
+                # array[iInputs][iWindows][iValues]
+                for iInputs in range(self._labels.size(0)): # Save the inputs values (iWindows)
+                    file.write("{\n")
+                    np.savetxt(file, self._labels[iInputs], fmt='%f', delimiter=',', newline=',\n')
+                    file.write("},\n")
+                file.write("};\n")
+
+                file.write("const unsigned long " + file_name + "_nInputs = " + str(self._features.size(0)) + ";\n")
+                file.write("const unsigned long " + file_name + "_window_size = " + str(window_size) + ";\n")
+                file.write("const unsigned long " + file_name + "_dimension = " + str(dataset.dimension) + ";\n")
+                file.write("\n#endif\n")
+            print("Done: " + file_name)
+
 
     def __getitem__(self, index: int) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
         """
