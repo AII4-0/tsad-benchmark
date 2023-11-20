@@ -10,6 +10,15 @@ from benchmark.data_module import DataModule
 from utils import constants
 import os
 
+train_dataloader = None
+
+def representative_data_gen():
+    iterator = iter(train_dataloader)
+    for i in range(100):
+        # Model has only one input so each data point has one element.
+        input_value = next(iterator)
+        yield [input_value]
+
 def convert_to_c(tflite_model, file_name, path0):
     from tensorflow.lite.python.util import convert_bytes_to_c_source
     source_text, header_text = convert_bytes_to_c_source(tflite_model, file_name)
@@ -46,6 +55,7 @@ def main() -> None:
     data_module.prepare_data()
 
     # Get the train dataloader for the entity
+    global train_dataloader
     train_dataloader, _ = data_module[args.entity]
 
     # Get a data sample
@@ -62,7 +72,10 @@ def main() -> None:
         outputs_channel_order=ChannelOrder.PYTORCH
     )
 
+    ############################################
     # Convert the Keras model to TensorFlow lite
+    ############################################
+    print("Convert and save tf lite model")   
     tflite_model = tf.lite.TFLiteConverter.from_keras_model(keras_model).convert()
 
     # Save the model
@@ -74,6 +87,26 @@ def main() -> None:
     source_file = args.model.stem
     convert_to_c(tflite_model, source_file, args.model.parent)
 
+    ############################################
+    # Convert keras model into quantized tf lite model
+    ############################################
+    print("Convert and save tf lite model - quantized")    
+    converter = tf.lite.TFLiteConverter.from_keras_model(keras_model)
+    converter.optimizations = [tf.lite.Optimize.DEFAULT]
+    converter.representative_dataset = representative_data_gen
+    converter.target_spec.supported_types = [tf.int8]
+    converter.exclude_conversion_metadata = True
+    converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
+
+    # Convert the Keras model to TensorFlow lite quant
+    tflite_model_quant = converter.convert()
+
+    # Save the model
+    with open(args.model.parent.joinpath(args.model.stem + "_quant.tflite"), "wb") as f:
+        f.write(tflite_model_quant)
+
+    # convert to C source code and store it
+    convert_to_c(tflite_model_quant, source_file + "_quant", args.model.parent)
 
 
 if __name__ == "__main__":
