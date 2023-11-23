@@ -21,6 +21,7 @@ class DataModule:
                  dataset: str,
                  window_size: int,
                  batch_size: int,
+                 start_index_inputs_exported_in_c : int = 0,
                  n_inputs_exported_in_c : int = 0) -> None:
         """
         Create an object of `DataModule` class.
@@ -38,6 +39,7 @@ class DataModule:
         self._window_size = window_size
         self._batch_size = batch_size
         self._entity_idx = 0
+        self._start_index_inputs_exported_in_c = start_index_inputs_exported_in_c
         self._n_inputs_exported_in_c = n_inputs_exported_in_c
 
     @staticmethod
@@ -53,6 +55,7 @@ class DataModule:
         parser.add_argument("--dataset", choices=constants.DATASET_NAMES, required=True)
         parser.add_argument("--window_size", type=int, required=True)
         parser.add_argument("--batch_size", type=int, required=True)
+        parser.add_argument("--start_index_inputs_exported_in_c", type=int, default=0)
         parser.add_argument("--n_inputs_exported_in_c", type=int, default=0)
         return parent_parser
 
@@ -128,6 +131,7 @@ class DataModule:
             scaler=scaler,
             window_size=self._window_size,
             train=True,
+            start_index_inputs_exported_in_c = self._start_index_inputs_exported_in_c,
             n_inputs_exported_in_c=self._n_inputs_exported_in_c
         )
 
@@ -139,6 +143,7 @@ class DataModule:
             scaler=scaler,
             window_size=self._window_size,
             train=False,
+            start_index_inputs_exported_in_c = self._start_index_inputs_exported_in_c,
             n_inputs_exported_in_c=self._n_inputs_exported_in_c
         )
 

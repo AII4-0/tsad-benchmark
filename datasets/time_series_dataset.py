@@ -20,6 +20,7 @@ class TimeSeriesDataset(Dataset):
                  scaler: Union[MinMaxScaler, StandardScaler, RobustScaler],
                  window_size: int,
                  train: bool,
+                 start_index_inputs_exported_in_c: int = 0,
                  n_inputs_exported_in_c: int = 0) -> None:
         """
         Create an object of the `TimeSeriesDataset` class.
@@ -61,12 +62,13 @@ class TimeSeriesDataset(Dataset):
         self._features = torch.tensor(features)
         self._labels = torch.tensor(labels)
         self._train = train
+        self._start_index_inputs_exported_in_c = start_index_inputs_exported_in_c
         self._n_inputs_exported_in_c = n_inputs_exported_in_c
 
         # Export the data in C
         if self._n_inputs_exported_in_c > 0:
             # Adapat _n_inputs_exported_in_c if the number of input is higher than the number of inputs of the dataset
-            self._n_inputs_exported_in_c = self._features.size(0) if self._n_inputs_exported_in_c > self._features.size(0) else self._n_inputs_exported_in_c
+            self._n_inputs_exported_in_c = (self._features.size(0) - self._start_index_inputs_exported_in_c) if (self._start_index_inputs_exported_in_c + self._n_inputs_exported_in_c) > self._features.size(0) else self._n_inputs_exported_in_c
 
             # Loop on the selected scv file
             path_scv_file = os.path.join(data_dir, dataset.name, entity + "." + ("train" if train else "test") + ".csv")
@@ -92,18 +94,18 @@ class TimeSeriesDataset(Dataset):
                     file.write("{\n")
                     for iWindows in range(window_size):   # Save windows values (iValues)
                         file.write("{")
-                        np.savetxt(file, self._features[iInputs][iWindows], fmt='%f', delimiter=',', newline=',')
+                        np.savetxt(file, self._features[iInputs + self._start_index_inputs_exported_in_c][iWindows], fmt='%f', delimiter=',', newline=',')
                         file.write("},\n")
                     file.write("},\n")
                 file.write("};\n")
 
                 # Save the labels values
-                file.write("const float " + file_name + "[" + str(self._n_inputs_exported_in_c) + "][" + str(window_size) + "] = {\n")
+                file.write("const float " + file_name + "_label" + "[" + str(self._n_inputs_exported_in_c) + "][" + str(window_size) + "] = {\n")
 
                 # array[iInputs][iWindows]
                 for iInputs in range(self._n_inputs_exported_in_c): # Save the inputs values (iWindows)
                     file.write("{\n")
-                    np.savetxt(file, self._labels[iInputs], fmt='%f', delimiter=',', newline=',\n')
+                    np.savetxt(file, self._labels[iInputs + self._start_index_inputs_exported_in_c], fmt='%f', delimiter=',', newline=',\n')
                     file.write("},\n")
                 file.write("};\n")
 

@@ -9,15 +9,14 @@ from nobuco import ChannelOrder
 from benchmark.data_module import DataModule
 from utils import constants
 import os
-
-train_dataloader = None
+import numpy as np
 
 def representative_data_gen():
-    iterator = iter(train_dataloader)
     for i in range(100):
         # Model has only one input so each data point has one element.
-        input_value = next(iterator)
-        yield [input_value]
+        data = np.random.rand(1, 99, 1)
+
+        yield [data.astype(np.float32)]
 
 def convert_to_c(tflite_model, file_name, path0):
     from tensorflow.lite.python.util import convert_bytes_to_c_source
@@ -55,19 +54,24 @@ def main() -> None:
     data_module.prepare_data()
 
     # Get the train dataloader for the entity
-    global train_dataloader
     train_dataloader, _ = data_module[args.entity]
 
     # Get a data sample
     data_sample = next(iter(train_dataloader))
+    x = data_sample[:, : -1]
 
     # Load the PyTorch model
     pytorch_model = torch.load(args.model)
 
+    # Disable gradient calculation to test the model
+    torch.autograd.set_grad_enabled(False)
+    #output = torch.tensor([[[0.0]]])
+    out = pytorch_model(x)
+
     # Convert the PyTorch model to Keras model
     keras_model = nobuco.pytorch_to_keras(
         pytorch_model,
-        args=[data_sample],
+        args=[x],
         inputs_channel_order=ChannelOrder.PYTORCH,
         outputs_channel_order=ChannelOrder.PYTORCH
     )
@@ -84,8 +88,7 @@ def main() -> None:
 
     # convert to C source code and store it
     print("convert to C source code")
-    source_file = args.model.stem
-    convert_to_c(tflite_model, source_file, args.model.parent)
+    convert_to_c(tflite_model, args.model.stem, args.model.parent)
 
     ############################################
     # Convert keras model into quantized tf lite model
@@ -94,9 +97,9 @@ def main() -> None:
     converter = tf.lite.TFLiteConverter.from_keras_model(keras_model)
     converter.optimizations = [tf.lite.Optimize.DEFAULT]
     converter.representative_dataset = representative_data_gen
-    converter.target_spec.supported_types = [tf.int8]
-    converter.exclude_conversion_metadata = True
-    converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
+    # converter.target_spec.supported_types = [tf.float16]
+    # converter.exclude_conversion_metadata = True
+    # converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
 
     # Convert the Keras model to TensorFlow lite quant
     tflite_model_quant = converter.convert()
@@ -106,7 +109,7 @@ def main() -> None:
         f.write(tflite_model_quant)
 
     # convert to C source code and store it
-    convert_to_c(tflite_model_quant, source_file + "_quant", args.model.parent)
+    convert_to_c(tflite_model_quant, args.model.stem + "_quant", args.model.parent)
 
 
 if __name__ == "__main__":
