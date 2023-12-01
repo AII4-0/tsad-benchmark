@@ -57,6 +57,7 @@ def main() -> None:
     tflite_predictions = []
 
     # Iterate over test batches
+    i_input = 0
     for x, y in test_dataloader:
         # Perform the prediction with the PyTorch model
         x = x[:, : -1]
@@ -73,6 +74,12 @@ def main() -> None:
         pytorch_predictions.append(pytorch_pred.numpy().squeeze())
         tflite_predictions.append(tflite_pred.squeeze())
 
+        # Print input data
+        if i_input >=400 and i_input < 500:
+            print(f'Input i: {i_input} data : {x}')
+
+        i_input = i_input + 1
+
     # Convert lists to tensors
     pytorch_predictions = np.array(pytorch_predictions)
     tflite_predictions = np.array(tflite_predictions)
@@ -84,6 +91,8 @@ def main() -> None:
     print(f"Mean squared error: {mae:.20f}")
     print(f'Pytorch prediction {pytorch_predictions}')
     print(f'Tflite prediction {tflite_predictions}')
+    print(f'Tflite prediction[0:100] {tflite_predictions[0:100]}')
+    print(f'Tflite prediction[400:500] {tflite_predictions[400:500]}')
     pass
 
 

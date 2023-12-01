@@ -11,10 +11,19 @@ from utils import constants
 import os
 import numpy as np
 
+test_dataloader = None
+
 def representative_data_gen():
-    for i in range(100):
+    global test_dataloader
+    iterator = iter(test_dataloader)
+    length = len(iterator)
+
+    for i in range(length):
         # Model has only one input so each data point has one element.
-        data = np.random.rand(1, 99, 1)
+        # data = np.random.rand(1, 99, 1)
+        data = next(iterator)
+        data = data[0][:, : -1]
+        data = data.numpy()
 
         yield [data.astype(np.float32)]
 
@@ -54,11 +63,12 @@ def main() -> None:
     data_module.prepare_data()
 
     # Get the train dataloader for the entity
-    train_dataloader, _ = data_module[args.entity]
+    global test_dataloader
+    train_dataloader, test_dataloader = data_module[args.entity]
 
     # Get a data sample
-    data_sample = next(iter(train_dataloader))
-    x = data_sample[:, : -1]
+    data_sample = next(iter(test_dataloader))
+    x = data_sample[0][:, : -1]
 
     # Load the PyTorch model
     pytorch_model = torch.load(args.model)
@@ -99,7 +109,7 @@ def main() -> None:
     converter.representative_dataset = representative_data_gen
     # converter.target_spec.supported_types = [tf.float16]
     # converter.exclude_conversion_metadata = True
-    # converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
+    converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
 
     # Convert the Keras model to TensorFlow lite quant
     tflite_model_quant = converter.convert()
