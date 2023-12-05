@@ -75,8 +75,8 @@ def main() -> None:
         tflite_predictions.append(tflite_pred.squeeze())
 
         # Print input data
-        if i_input >=400 and i_input < 500:
-            print(f'Input i: {i_input} data : {x}')
+        if i_input >=400 and i_input < 430:
+            print(f'Input i: {i_input} data : {x.numpy().reshape(-1)}')
 
         i_input = i_input + 1
 
