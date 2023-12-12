@@ -8,7 +8,7 @@ class Datasets:
     KDD_TSAD = DatasetDescriptor(
         name="KDD-TSAD",
         type=TimeSeriesTypes.UNIVARIATE,
-        download_url="https://nextcloud.hpi.de/s/yWMnq3M2AJXn6gd/download",
+        download_url="https://my.hidrive.com/api/sharelink/download?id=8ECmABis",
         dimension=1,
         entities=[
             "001_UCR_Anomaly_DISTORTED1sddb40",
@@ -266,7 +266,7 @@ class Datasets:
     NASA_MSL = DatasetDescriptor(
         name="NASA-MSL",
         type=TimeSeriesTypes.UNIVARIATE,
-        download_url="https://nextcloud.hpi.de/s/96A4zRdgigBpyMk/download",
+        download_url="https://my.hidrive.com/api/sharelink/download?id=dPCmgheW",
         dimension=1,
         entities=[
             "C-1",
@@ -301,7 +301,7 @@ class Datasets:
     NASA_SMAP = DatasetDescriptor(
         name="NASA-SMAP",
         type=TimeSeriesTypes.UNIVARIATE,
-        download_url="https://nextcloud.hpi.de/s/kf9ozeYAmb7TSab/download",
+        download_url="https://my.hidrive.com/api/sharelink/download?id=B6iGA1nA",
         dimension=1,
         entities=[
             "A-1",
@@ -363,7 +363,7 @@ class Datasets:
     SMD = DatasetDescriptor(
         name="SMD",
         type=TimeSeriesTypes.MULTIVARIATE,
-        download_url="https://nextcloud.hpi.de/s/TXiCmLS5djpdWK7/download",
+        download_url="https://my.hidrive.com/api/sharelink/download?id=W0CGA01i",
         dimension=38,
         entities=[
             "machine-1-1",

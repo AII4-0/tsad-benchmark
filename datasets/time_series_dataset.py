@@ -19,7 +19,9 @@ class TimeSeriesDataset(Dataset):
                  entity: str,
                  scaler: Union[MinMaxScaler, StandardScaler, RobustScaler],
                  window_size: int,
-                 train: bool) -> None:
+                 train: bool,
+                 start_index_inputs_exported_in_c: int = 0,
+                 n_inputs_exported_in_c: int = 0) -> None:
         """
         Create an object of the `TimeSeriesDataset` class.
 
@@ -60,6 +62,59 @@ class TimeSeriesDataset(Dataset):
         self._features = torch.tensor(features)
         self._labels = torch.tensor(labels)
         self._train = train
+        self._start_index_inputs_exported_in_c = start_index_inputs_exported_in_c
+        self._n_inputs_exported_in_c = n_inputs_exported_in_c
+
+        # Export the data in C
+        if self._n_inputs_exported_in_c > 0:
+            # Adapat _n_inputs_exported_in_c if the number of input is higher than the number of inputs of the dataset
+            self._n_inputs_exported_in_c = (self._features.size(0) - self._start_index_inputs_exported_in_c) if (self._start_index_inputs_exported_in_c + self._n_inputs_exported_in_c) > self._features.size(0) else self._n_inputs_exported_in_c
+
+            # Loop on the selected scv file
+            path_scv_file = os.path.join(data_dir, dataset.name, entity + "." + ("train" if train else "test") + ".csv")
+
+            # create an empty file
+            file_name = os.path.split(os.path.splitext(path_scv_file)[0])[-1].replace(".", "_").replace("-", "_")
+            path_h_file = os.path.split(path_scv_file)[0]
+            path_h_file = os.path.join(path_h_file, file_name + ".h")
+            open(path_h_file, 'w').close()
+
+            # Input shape : 1 x WindowSize x 1  or  1 x WindowSize x 38
+            # Label :       1 x WindowSize      or  1 x WindowSize
+            # append the raw data to the file
+            with open(path_h_file, "a") as file:
+                file_name = os.path.splitext(os.path.split(path_h_file)[-1])[0]
+                file.write("\n#ifndef " + file_name + "_H_\n#define " + file_name + "_H_\n\n")
+
+                # Save the dataset values
+                file.write("const float " + file_name + "[" + str(self._n_inputs_exported_in_c) + "][" + str(window_size) + "][" + str(dataset.dimension) + "] = {\n")
+
+                # array[iInputs][iWindows][iValues]
+                for iInputs in range(self._n_inputs_exported_in_c): # Save the inputs values (iWindows)
+                    file.write("{\n")
+                    for iWindows in range(window_size):   # Save windows values (iValues)
+                        file.write("{")
+                        np.savetxt(file, self._features[iInputs + self._start_index_inputs_exported_in_c][iWindows], fmt='%f', delimiter=',', newline=',')
+                        file.write("},\n")
+                    file.write("},\n")
+                file.write("};\n")
+
+                # Save the labels values
+                file.write("const float " + file_name + "_label" + "[" + str(self._n_inputs_exported_in_c) + "][" + str(window_size) + "] = {\n")
+
+                # array[iInputs][iWindows]
+                for iInputs in range(self._n_inputs_exported_in_c): # Save the inputs values (iWindows)
+                    file.write("{\n")
+                    np.savetxt(file, self._labels[iInputs + self._start_index_inputs_exported_in_c], fmt='%f', delimiter=',', newline=',\n')
+                    file.write("},\n")
+                file.write("};\n")
+
+                file.write("const unsigned long " + file_name + "_nInputs = " + str(self._n_inputs_exported_in_c) + ";\n")
+                file.write("const unsigned long " + file_name + "_window_size = " + str(window_size) + ";\n")
+                file.write("const unsigned long " + file_name + "_dimension = " + str(dataset.dimension) + ";\n")
+                file.write("\n#endif\n")
+            print("Done: " + file_name)
+
 
     def __getitem__(self, index: int) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
         """

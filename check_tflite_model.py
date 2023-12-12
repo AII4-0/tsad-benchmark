@@ -22,18 +22,20 @@ def main() -> None:
     parser.add_argument("--window_size", type=int, required=True)
     parser.add_argument("--pytorch_model", type=Path, required=True)
     parser.add_argument("--tflite_model", type=Path, required=True)
+    parser.add_argument("--start_index_inputs_exported_in_c", type=int, default=0)
+    parser.add_argument("--n_inputs_exported_in_c", type=int, default=0)
 
     # Parse all arguments
     args = parser.parse_args()
 
     # Create the data module
-    data_module = DataModule(args.data_dir, args.dataset, args.window_size, 1)
+    data_module = DataModule(args.data_dir, args.dataset, args.window_size, 1, args.start_index_inputs_exported_in_c, args.n_inputs_exported_in_c)
 
     # Prepare data
     data_module.prepare_data()
 
     # Get the test dataloader for the entity
-    _, test_dataloader = data_module[args.entity]
+    y, test_dataloader = data_module[args.entity]
 
     # Disable gradient calculation
     torch.autograd.set_grad_enabled(False)
@@ -55,8 +57,12 @@ def main() -> None:
     tflite_predictions = []
 
     # Iterate over test batches
-    for x, _ in test_dataloader:
+    i_input = 0
+    for x, y in test_dataloader:
         # Perform the prediction with the PyTorch model
+        x = x[:, : -1]
+        # y = torch.tensor([[[0.0]]])
+        # pytorch_pred = pytorch_model(x, y)
         pytorch_pred = pytorch_model(x)
 
         # Perform the prediction with the TFLite model
@@ -68,6 +74,12 @@ def main() -> None:
         pytorch_predictions.append(pytorch_pred.numpy().squeeze())
         tflite_predictions.append(tflite_pred.squeeze())
 
+        # Print input data
+        if i_input >=400 and i_input < 430:
+            print(f'Input i: {i_input} data : {x.numpy().reshape(-1)}')
+
+        i_input = i_input + 1
+
     # Convert lists to tensors
     pytorch_predictions = np.array(pytorch_predictions)
     tflite_predictions = np.array(tflite_predictions)
@@ -77,6 +89,11 @@ def main() -> None:
 
     # Logging
     print(f"Mean squared error: {mae:.20f}")
+    print(f'Pytorch prediction {pytorch_predictions}')
+    print(f'Tflite prediction {tflite_predictions}')
+    print(f'Tflite prediction[0:100] {tflite_predictions[0:100]}')
+    print(f'Tflite prediction[400:500] {tflite_predictions[400:500]}')
+    pass
 
 
 if __name__ == "__main__":

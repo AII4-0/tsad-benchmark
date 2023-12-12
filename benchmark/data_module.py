@@ -20,7 +20,9 @@ class DataModule:
                  data_dir: str,
                  dataset: str,
                  window_size: int,
-                 batch_size: int) -> None:
+                 batch_size: int,
+                 start_index_inputs_exported_in_c : int = 0,
+                 n_inputs_exported_in_c : int = 0) -> None:
         """
         Create an object of `DataModule` class.
 
@@ -37,6 +39,8 @@ class DataModule:
         self._window_size = window_size
         self._batch_size = batch_size
         self._entity_idx = 0
+        self._start_index_inputs_exported_in_c = start_index_inputs_exported_in_c
+        self._n_inputs_exported_in_c = n_inputs_exported_in_c
 
     @staticmethod
     def add_argparse_args(parent_parser: ArgumentParser) -> ArgumentParser:
@@ -51,6 +55,8 @@ class DataModule:
         parser.add_argument("--dataset", choices=constants.DATASET_NAMES, required=True)
         parser.add_argument("--window_size", type=int, required=True)
         parser.add_argument("--batch_size", type=int, required=True)
+        parser.add_argument("--start_index_inputs_exported_in_c", type=int, default=0)
+        parser.add_argument("--n_inputs_exported_in_c", type=int, default=0)
         return parent_parser
 
     def prepare_data(self) -> None:
@@ -124,7 +130,9 @@ class DataModule:
             entity=self.dataset.entities[idx],
             scaler=scaler,
             window_size=self._window_size,
-            train=True
+            train=True,
+            start_index_inputs_exported_in_c = self._start_index_inputs_exported_in_c,
+            n_inputs_exported_in_c=self._n_inputs_exported_in_c
         )
 
         # Create the test datasets
@@ -134,7 +142,9 @@ class DataModule:
             entity=self.dataset.entities[idx],
             scaler=scaler,
             window_size=self._window_size,
-            train=False
+            train=False,
+            start_index_inputs_exported_in_c = self._start_index_inputs_exported_in_c,
+            n_inputs_exported_in_c=self._n_inputs_exported_in_c
         )
 
         # Create the train data loader
